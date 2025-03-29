@@ -1,0 +1,4 @@
+.env 
+/myenv
+service_account_googlesheet.json
+.env
