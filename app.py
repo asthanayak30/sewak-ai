@@ -57,7 +57,11 @@ def vector_embedding():
             return
         
         data_df = load_google_sheet_data()  # Fetch data from Google Sheet
-        documents = [". ".join(f"{col}: {val}" for col, val in row.items()) for _, row in data_df.iterrows()]
+        excluded_columns = ["Timestamp","Name", "Student Enrollment Number"]  # Modify this based on actual column names
+        documents = [
+            ". ".join(f"{col}: {val}" for col, val in row.items() if col not in excluded_columns)
+            for _, row in data_df.iterrows()
+        ]
         
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         final_documents = text_splitter.create_documents(documents)
@@ -70,9 +74,8 @@ def vector_embedding():
 
 prompt1 = st.text_input("Enter your Question....")
 
-if st.button("Creating vector Store"):
-    vector_embedding()
-    st.write("Vector Store DB is ready")
+vector_embedding()
+st.write("Vector Store DB is ready")
 
 if prompt1:
     document_chain = create_stuff_documents_chain(llm, ChatPromptTemplate.from_template("""
@@ -91,7 +94,7 @@ if prompt1:
         st.error("Vector store is not initialized. Click 'Creating vector Store' first.")
         st.stop()
 
-    retriever = st.session_state.vectors.as_retriever()
+    retriever = st.session_state.vectors.as_retriever(search_kwargs={"k": 15})
     retrieval_chain= create_retrieval_chain(retriever,document_chain)
     
     start = time.process_time()
@@ -107,10 +110,10 @@ if prompt1:
 
 
     #with a streamlit expander
-    with st.expander("Document similarity search"):
-        if retrieved_docs:
-            for i, doc in enumerate(response["context"]):
-                st.write(doc.page_content)
-                st.write("-------------------------")
-        else:
-            st.write("No relevant document found. Answering using general knowledge.")
+    #with st.expander("Document similarity search"):
+        #if retrieved_docs:
+            #for i, doc in enumerate(response["context"]):
+                #st.write(doc.page_content)
+                #st.write("-------------------------")
+        #else:
+            #st.write("No relevant document found. Answering using general knowledge.")'''
